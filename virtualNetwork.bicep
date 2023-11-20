@@ -11,6 +11,7 @@ param parAzBastionNsgName string
 param firewallNetworkRulesConfig object
 param firewallDNATRulesConfig object
 param firewallpolicyconfig object
+param firewallApplicationRulesConfig object
 
 var varSubnetMap = map(range(0, length(parSubnets)), i => {
   name: parSubnets[i].name
@@ -211,82 +212,33 @@ resource RuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionG
         ]
       }
       {
-        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        ruleCollectionType: firewallApplicationRulesConfig.ruleCollection[0].ruleCollectionType
         action: {
-          type: 'Allow'
+          type: firewallApplicationRulesConfig.ruleCollection[0].action
         }
-        name: 'applicationrulecollection'
-        priority: 400
-        rules: [
-          {
-            ruleType: 'ApplicationRule'
-            name: 'applicationrule'
+        name: firewallApplicationRulesConfig.ruleCollectionName
+        priority: firewallApplicationRulesConfig.ruleCollectionPriority
+        rules: [ for i in range(0, length(firewallApplicationRulesConfig.ruleCollection[0].rules)): {
+            ruleType: firewallApplicationRulesConfig.ruleCollection[0].rules[i].ruleType
+            name: firewallApplicationRulesConfig.ruleCollection[0].rules[i].name
             protocols: [
               {
-                port: 80
-                protocolType: 'Http'
+                port: firewallApplicationRulesConfig.ruleCollection[0].rules[i].protocols[0].port
+                protocolType: firewallApplicationRulesConfig.ruleCollection[0].rules[i].protocols[0].protocolType
               }
             ]
-            sourceAddresses: [
-              '10.6.1.4'
-            ]
+            sourceAddresses: firewallApplicationRulesConfig.ruleCollection[0].rules[i].sourceAddresses
             // sourceIpGroups: [
             //   'string'
             // ]
-            targetFqdns: [
-              '*'
-            ]
-            // targetUrls: [
-            //   'https://www.google.com/'
-            // ]
+            targetFqdns: firewallApplicationRulesConfig.ruleCollection[0].rules[i].targetFqdns
+            targetUrls: firewallApplicationRulesConfig.ruleCollection[0].rules[i].targetUrls
           }
         ]
       }
     ]
   }
 }
-
-// resource applicationrulecollection 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
-//   parent: firewallPolicy
-//   name: 'applicationrulecollection'
-//   properties: {
-//     priority: 100
-//     ruleCollections: [
-//       {
-//         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-//         action: {
-//           type: 'Allow'
-//         }
-//         name: 'applicationrulecollection'
-//         priority: 100
-//         rules: [
-//           {
-//             ruleType: 'ApplicationRule'
-//             name: 'applicationrule'
-//             protocols: [
-//               {
-//                 port: 80
-//                 protocolType: 'Http'
-//               }
-//             ]
-//             sourceAddresses: [
-//               '10.6.1.4'
-//             ]
-//             // sourceIpGroups: [
-//             //   'string'
-//             // ]
-//             targetFqdns: [
-//               '*'
-//             ]
-//             targetUrls: [
-//               'https://www.google.com/'
-//             ]
-//           }
-//         ]
-//       }
-//     ]
-//   }
-// }
 
 
 // firewall route table

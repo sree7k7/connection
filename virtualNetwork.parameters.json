@@ -160,7 +160,72 @@
       }
     ]
   }
+},
+
+"firewallApplicationRulesConfig": { 
+  "value": {
+    "comment": "----------ApplicationRuleCollection---------",
+    "ruleCollectionName": "applicationrulecollection",
+    "ruleCollectionPriority": 400,
+    "ruleCollection": [
+      {
+      "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+      "action": "Allow",
+      "rules": [
+      {
+        "name": "applicationrule",
+        "ruleType": "ApplicationRule",
+        "description": "This will allow only http and https traffic to the url xxx.com",
+        "protocols": [
+          {
+            "protocolType": "Http",
+            "port": 80
+          },
+          {
+            "protocolType": "Https",
+            "port": 443
+          }
+        ],
+        "sourceAddresses": [
+          "83.221.156.201"
+        ],
+        "targetFqdns": [
+          "*",
+          "*.goolge.com"
+        ],
+        "targetUrls": [
+          "https://www.google.com/"
+        ]
+      },
+      {
+        "name": "allow-microsoft",
+        "ruleType": "ApplicationRule",
+        "description": "This will allow only http and https traffic to the url xxx.com",
+        "protocols": [
+          {
+            "protocolType": "Http",
+            "port": 80
+          },
+          {
+            "protocolType": "Https",
+            "port": 443
+          }
+        ],
+        "sourceAddresses": [
+          "83.221.156.202"
+        ],
+        "targetFqdns": [
+          "*",
+          "*.microsoft.com"
+        ],
+        "targetUrls": [
+          "https://www.microsoft.com/"
+        ]
+      }
+      ]
+    }
+  ]
+}
 }
   }
 }
-
