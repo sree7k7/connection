@@ -47,6 +47,120 @@
           "routeTableId": ""
         }
       ]
+    },
+    "firewallpolicyconfig":{
+      "value": {
+        "policyName": "AzureFirewallPolicy",
+        "threatIntelMode": "Alert"
+      }
+    },
+    "firewallNetworkRulesConfig": { 
+      "value": {
+        "ruleCollectionName": "RuleCollections",
+        "ruleCollectionPriority": 200,
+        "ruleCollectionAction": "Allow",
+        "ruleCollection": [
+          {
+          "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+          "action": "Allow",
+          "priority": 100,
+          "rules": [
+          {
+            "name": "AllowRDPAccess",
+            "ruleType": "NetworkRule",
+            "description": "DNATRule",
+            "protocols": [
+              "UDP",
+              "TCP"
+            ],
+            "sourceAddresses": [
+              "*"
+            ],
+            "destinationAddresses": [
+              "52.178.134.120",
+              "43.53.11.124"
+            ],
+            "destinationPorts": [
+              "3389"
+            ],
+            "destinationFqdns": [],
+            "sourceIpGroups": [],
+            "destinationIpGroups": [],
+            "ipProtocols": [],
+            "sourcePorts": []
+          },
+          {
+            "name": "AllowRDPAccessfromcisco",
+            "ruleType": "NetworkRule",
+            "description": "Ruless",
+            "protocols": [
+              "UDP"
+            ],
+            "sourceAddresses": [
+              "*"
+            ],
+            "destinationAddresses": [
+              "52.178.134.123",
+              "43.53.11.122"
+            ],
+            "destinationPorts": [
+              "8080"
+            ],
+            "translatedAddress": "3389"
+          }
+          ]
+        }
+      ]
     }
+  },
+  "firewallDNATRulesConfig": { 
+    "value": {
+      "ruleCollectionName": "DnatRuleCollections",
+      "ruleCollectionPriority": 200,
+      "threatIntelMode": "Alert",
+      "ruleCollection": [
+        {
+        "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
+        "action": "Allow",
+        "priority": 100,
+        "rules": [
+        {
+          "name": "dnatrule",
+          "ruleType": "NatRule",
+          "description": "Ruless",
+          "protocols": [
+            "UDP"
+          ],
+          "sourceAddresses": [
+            "83.221.156.201"
+          ],
+          "translatedAddress": "10.1.2.5",
+          "destinationPorts": [
+            "8080"
+          ],
+          "translatedPort": "3389"
+        },
+        {
+          "name": "dnatrule2",
+          "ruleType": "NatRule",
+          "description": "Ruless2",
+          "protocols": [
+            "TCP"
+          ],
+          "sourceAddresses": [
+            "83.221.156.202"
+          ],
+          "translatedAddress": "10.2.2.5",
+          "destinationPorts": [
+            "443"
+          ],
+          "translatedPort": "3389"
+        }
+        ]
+      }
+    ]
   }
 }
+  }
+}
+

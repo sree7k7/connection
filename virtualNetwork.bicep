@@ -8,6 +8,9 @@ param parSubnets array = [
 ]
 param parAzBastionEnabled bool
 param parAzBastionNsgName string
+param firewallNetworkRulesConfig object
+param firewallDNATRulesConfig object
+param firewallpolicyconfig object
 
 var varSubnetMap = map(range(0, length(parSubnets)), i => {
   name: parSubnets[i].name
@@ -37,8 +40,15 @@ properties: {
   routeTable: (empty(subnet.routeTableId)) ? null : {
     id: subnet.routeTableId
   }
+  // fwroutetable: (subnet.name == 'AzureFirewallSubnet') ?  null : {
+  //   id: fwrouterable.id
+  // } 
 }
 }]
+
+// resource fwrouterable 'Microsoft.Network/routeTables@2023-04-01' = {
+//   // fwrouterable definition
+// }
 
 resource resHubVnet 'Microsoft.Network/virtualNetworks@2020-06-01' = {
 name: vnetName
@@ -61,6 +71,7 @@ properties: {
 output resHubVnetId string = resHubVnet.id
 output gatewaySubnetId string = resHubVnet.properties.subnets[0].id
 output frontendsubnetname string = resHubVnet.properties.subnets[3].id
+output azurefirewallsubnetname string = resHubVnet.properties.subnets[2].id
 
 
 // public ip address //
@@ -76,6 +87,30 @@ resource fwpip 'Microsoft.Network/publicIPAddresses@2022-01-01' =  {
     publicIPAddressVersion: 'IPv4'
   }
 }
+
+// associate route table to firewallsubnet
+
+// resource firewallsubnet 'Microsoft.Network/virtualNetworks/subnets@2020-06-01'  existing = {
+//   parent: resHubVnet
+//   name: 'AzureFirewallSubnet'
+//   // properties: {
+//   //   addressPrefix: parSubnets[2].ipAddressRange
+//   //   delegations: [
+//   //     {
+//   //       name: 'Microsoft.AzureFirewall'
+//   //       properties: {
+//   //         serviceName: 'Microsoft.AzureFirewall'
+//   //       }
+//   //     }
+//   //   ]
+//   //   networkSecurityGroup: {
+//   //     id: parSubnets[2].networkSecurityGroupId
+//   //   }
+//   //   routeTable: {
+//   //     id: resHubVnet.properties.subnets[2].id
+//   //   }
+//   // }
+// }
 
 // firewall //
 
@@ -113,49 +148,40 @@ resource firewall 'Microsoft.Network/azureFirewalls@2021-03-01' = {
 // firewall policy
 
 resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
-  name: 'firewallPolicy'
+  name: firewallpolicyconfig.policyName
   location: parLocation
   properties: {
-    threatIntelMode: 'Alert'
+    threatIntelMode: firewallpolicyconfig.threatIntelMode
   }
 }
 
 
 // firewall policy NAT rules
 
-resource networkRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
+resource RuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
   parent: firewallPolicy
-  name: 'DefaultNetworkRuleCollectionGroup'
+  name: firewallNetworkRulesConfig.ruleCollectionName
   properties: {
-    priority: 200
-    ruleCollections: [
-      {
+    priority: firewallNetworkRulesConfig.ruleCollectionPriority
+      ruleCollections: [ {
         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
         action: {
-          type: 'Allow'
+          type: firewallNetworkRulesConfig.ruleCollection[0].action
         }
-        name: 'azure-global-services-nrc'
-        priority: 1250
-        rules: [
-          {
-            ruleType: 'NetworkRule'
-            name: 'time-windows'
-            ipProtocols: [
-              'UDP'
-            ]
-            destinationAddresses: [
-              '13.86.101.172'
-            ]
-            sourceAddresses: [
-              '10.0.0.0/16'
-            ]
+        name: firewallNetworkRulesConfig.ruleCollection[0].rules[0].name
+        // name: 'NetworkRuleCollectioname'
+        priority: firewallNetworkRulesConfig.ruleCollection[0].priority
+        rules: [ for i in range(0, length(firewallNetworkRulesConfig.ruleCollection[0].rules)): {
+            ruleType: firewallNetworkRulesConfig.ruleCollection[0].rules[i].ruleType
+            name: firewallNetworkRulesConfig.ruleCollection[0].rules[i].name
+            ipProtocols: firewallNetworkRulesConfig.ruleCollection[0].rules[i].protocols
+            destinationAddresses: firewallNetworkRulesConfig.ruleCollection[0].rules[i].destinationAddresses           
+            sourceAddresses: firewallNetworkRulesConfig.ruleCollection[0].rules[i].sourceAddresses
             // sourceIpGroups: [
             //   workloadIpGroup.id
             //   infraIpGroup.id
             // ]
-            destinationPorts: [
-              '123'
-            ]
+            destinationPorts: firewallNetworkRulesConfig.ruleCollection[0].rules[i].destinationPorts
           }
         ]
       }
@@ -164,31 +190,55 @@ resource networkRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleColl
         action: {
           type: 'DNAT'
         }
-        rules: [
-          {
+        name: firewallDNATRulesConfig.ruleCollectionName
+        priority: firewallDNATRulesConfig.ruleCollectionPriority
+        rules: [ for i in range(0, length(firewallDNATRulesConfig.ruleCollection[0].rules)):{
             description: 'nat rule'
-            name: 'nat-rdp-rule'
-            ruleType: 'NatRule'
-            // priority: 100
-            // For remaining properties, see FirewallPolicyRule objects
-            sourceAddresses: [
-              '83.221.156.201'
-            ]
-            ipProtocols: [
-              'TCP'
-            ]
+            name: firewallDNATRulesConfig.ruleCollection[0].rules[i].name
+            ruleType: firewallDNATRulesConfig.ruleCollection[0].rules[i].ruleType
+            sourceAddresses: firewallDNATRulesConfig.ruleCollection[0].rules[i].sourceAddresses
+            ipProtocols: firewallDNATRulesConfig.ruleCollection[0].rules[i].protocols
             // sourceIpGroups: [
             //   'string'
             // ]
             destinationAddresses: [
-              '52.178.130.146'
+              fwpip.properties.ipAddress
             ]
-            destinationPorts: [ // this is used along with fwpip (e.g, ip:4000)
-              '4000'
+            destinationPorts: firewallDNATRulesConfig.ruleCollection[0].rules[i].destinationPorts // this is used along with fwpip (e.g, ip:4000)
+            translatedAddress: firewallDNATRulesConfig.ruleCollection[0].rules[i].translatedAddress
+            translatedPort: firewallDNATRulesConfig.ruleCollection[0].rules[i].translatedPort
+          }   
+        ]
+      }
+      {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: 'Allow'
+        }
+        name: 'applicationrulecollection'
+        priority: 400
+        rules: [
+          {
+            ruleType: 'ApplicationRule'
+            name: 'applicationrule'
+            protocols: [
+              {
+                port: 80
+                protocolType: 'Http'
+              }
             ]
-            translatedAddress: '10.10.20.4'
-            // translatedFqdn: 'string'
-            translatedPort: '3389'
+            sourceAddresses: [
+              '10.6.1.4'
+            ]
+            // sourceIpGroups: [
+            //   'string'
+            // ]
+            targetFqdns: [
+              '*'
+            ]
+            // targetUrls: [
+            //   'https://www.google.com/'
+            // ]
           }
         ]
       }
@@ -196,11 +246,53 @@ resource networkRuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleColl
   }
 }
 
+// resource applicationrulecollection 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
+//   parent: firewallPolicy
+//   name: 'applicationrulecollection'
+//   properties: {
+//     priority: 100
+//     ruleCollections: [
+//       {
+//         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+//         action: {
+//           type: 'Allow'
+//         }
+//         name: 'applicationrulecollection'
+//         priority: 100
+//         rules: [
+//           {
+//             ruleType: 'ApplicationRule'
+//             name: 'applicationrule'
+//             protocols: [
+//               {
+//                 port: 80
+//                 protocolType: 'Http'
+//               }
+//             ]
+//             sourceAddresses: [
+//               '10.6.1.4'
+//             ]
+//             // sourceIpGroups: [
+//             //   'string'
+//             // ]
+//             targetFqdns: [
+//               '*'
+//             ]
+//             targetUrls: [
+//               'https://www.google.com/'
+//             ]
+//           }
+//         ]
+//       }
+//     ]
+//   }
+// }
+
 
 // firewall route table
 
 resource fwrouterable 'Microsoft.Network/routeTables@2023-04-01' = {
-  name: 'fwrouterable'
+  name: 'fwroutetable'
   location: parLocation
   tags: {
     tagName1: 'tagValue1'
@@ -211,7 +303,7 @@ resource fwrouterable 'Microsoft.Network/routeTables@2023-04-01' = {
     routes: [
       {
         id: 'string'
-        name: 'tointernet'
+        name: 'to-internet'
         properties: {
           addressPrefix: '0.0.0.0/0'
           hasBgpOverride: true
@@ -221,20 +313,26 @@ resource fwrouterable 'Microsoft.Network/routeTables@2023-04-01' = {
         type: 'Microsoft.Network/routeTables/routes'
       }
     ]
+    // subnets: [
+    //   {
+    //     id: resHubVnet.properties.subnets[2].id
+    //     name: 'frontendsubnet'
+    //   }
+    // ]
   }
 }
 
 // firewall route table association
 
-resource fwrouterableassociation 'Microsoft.Network/routeTables/virtualNetworkRouteTables@2023-04-01' = {
-  name: 'fwrouterableassociation'
-  parent: fwrouterable
-  properties: {
-    routeTable: {
-      id: fwrouterable.id
-    }
-    subnet: {
-      id: resHubVnet.properties.subnets[2].id
-    }
-  }
-}
+// resource fwrouterableassociation 'Microsoft.Network/routeTables/association' = {
+//   name: 'fwrouterableassociation'
+//   parent: fwrouterable
+//   properties: {
+//     routeTable: {
+//       id: fwrouterable.id
+//     }
+//     subnet: {
+//       id: resHubVnet.properties.subnets[3].id
+//     }
+//   }
+// }

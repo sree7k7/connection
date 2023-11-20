@@ -32,6 +32,9 @@ param parPublicIpSku object = {
   name: 'Standard'
 }
 
+param firewallNetworkRulesConfig object
+param firewallDNATRulesConfig object
+param firewallpolicyconfig object
 
 // param parPublicIpName string
 
@@ -65,7 +68,12 @@ module modVnet 'virtualNetwork.bicep' = {
     vnetName: vnetName
     parTags: parTags
     parSubnets: parSubnets
+    firewallpolicyconfig: firewallpolicyconfig
+    firewallNetworkRulesConfig: firewallNetworkRulesConfig
+    firewallDNATRulesConfig: firewallDNATRulesConfig
     vnetAddressPrefix: vnetAddressPrefix
+    // parSubnetName: 'AzureBastionSubnet'
+    // firewallSubnetName: 'AzureFirewallSubnet'
   }
 }
 
