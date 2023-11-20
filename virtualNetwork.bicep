@@ -232,7 +232,6 @@ resource RuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionG
             //   'string'
             // ]
             targetFqdns: firewallApplicationRulesConfig.ruleCollection[0].rules[i].targetFqdns
-            targetUrls: firewallApplicationRulesConfig.ruleCollection[0].rules[i].targetUrls
           }
         ]
       }

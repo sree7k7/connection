@@ -192,11 +192,9 @@
         "targetFqdns": [
           "*",
           "*.goolge.com"
-        ],
-        "targetUrls": [
-          "https://www.google.com/"
         ]
       },
+      
       {
         "name": "allow-microsoft",
         "ruleType": "ApplicationRule",
@@ -217,9 +215,6 @@
         "targetFqdns": [
           "*",
           "*.microsoft.com"
-        ],
-        "targetUrls": [
-          "https://www.microsoft.com/"
         ]
       }
       ]
