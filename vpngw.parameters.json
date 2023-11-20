@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "parLocation": {
+      "value": "northeurope"
+    },
+    "parTags": {
+      "value": {
+        "environment": "dev",
+        "costCenter": "it"
+      }
+    },
+    "parVpnGatewayConfig": {
+      "value": {
+        "name": "vpnGW",
+        "gatewayType": "Vpn",
+        "sku": "VpnGw2",
+        "vpnType": "RouteBased",
+        "enableBgp": true,
+        "vpnGatewayGeneration": "Generation2",
+        "activeActive": false,
+        "enableBgpRouteTranslationForNat": false,
+        "enableDnsForwarding": false,
+        "bgpPeeringAddress ": "",
+        "bgpsettings": {
+          "asn": 65030,
+          "bgpPeeringAddress": "10.10.252.254"
+        }
+      }
+    },
+    "parAzVpnGatewayAvailabilityZones": {
+      "value": []
+    },
+    "localNetworkGatewayConfig": {
+      "value": {
+        "name": "localGW",
+        "localNetworkAddressSpace": {
+          "//comment": "Onprem addressPrefixes",
+          "BGPPeerIpAddress": "10.2.3.254"
+        },
+        "cgwip": {
+            "gatewayIpAddress": "20.4.240.140"
+        },
+        "asn": 65040,
+        "sharedKey": "abc@143"
+      }
+    }
+  }
+}
