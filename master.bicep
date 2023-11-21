@@ -128,26 +128,26 @@ module publicip 'publicip.bicep' = {
 }
 
 // vm
-module vm 'vm.bicep' = {
-  name: 'vm'
-  scope: resourceGroup(varHubResourceGroupName)
-  dependsOn: [
-    modVnet
-  ]
-  params: {
-    parLocation: parLocation
-    // parTags: parTags
-    // parResourcePrefix: parResourcePrefix
-    // parVnetId: resHubVnetRes.id
-    // parSubnetId: resHubVnetRes.properties.subnets[0].id
+// module vm 'vm.bicep' = {
+//   name: 'vm'
+//   scope: resourceGroup(varHubResourceGroupName)
+//   dependsOn: [
+//     modVnet
+//   ]
+//   params: {
+//     parLocation: parLocation
+//     // parTags: parTags
+//     // parResourcePrefix: parResourcePrefix
+//     // parVnetId: resHubVnetRes.id
+//     // parSubnetId: resHubVnetRes.properties.subnets[0].id
 
-    // subnetRef: frontendsubnet.id
-    subnetRef: modVnet.outputs.frontendsubnetname
-    vmSize: 'Standard_D2s_v3'
-    numberOfInstances: 1
-    vmNamePrefix: modVnet.name
-  }
-}
+//     // subnetRef: frontendsubnet.id
+//     subnetRef: modVnet.outputs.frontendsubnetname
+//     vmSize: 'Standard_D2s_v3'
+//     numberOfInstances: 1
+//     vmNamePrefix: modVnet.name
+//   }
+// }
 
 output outVnetId string = resHubVnetRes.id
 

@@ -3,9 +3,7 @@ param parLocation string
 param parTags object
 param vnetAddressPrefix string
 param parDnsServerIps array
-param parSubnets array = [
-  
-]
+param parSubnets array
 param parAzBastionEnabled bool
 param parAzBastionNsgName string
 param firewallNetworkRulesConfig object
@@ -25,6 +23,15 @@ var varSubnetProperties = [for subnet in varSubnetMap: {
 name: subnet.name
 properties: {
   addressPrefix: subnet.ipAddressRange
+  routeTable: (subnet.name == parSubnets[3].name ) ? {
+    id: fwroutetable.id
+  } 
+  : (subnet.name == 'AzureBastionSubnet' && parAzBastionEnabled) ? {
+    id: '${resourceGroup().id}/providers/Microsoft.Network/routeTables/${parAzBastionNsgName}'
+  } 
+  : (empty(subnet.routeTableId)) ? null : {
+    id: subnet.routeTableId
+  }
   delegations: (empty(subnet.delegation)) ? null : [
     {
       name: subnet.delegation
@@ -38,18 +45,9 @@ properties: {
   } : (empty(subnet.networkSecurityGroupId)) ? null : {
     id: subnet.networkSecurityGroupId
   }
-  routeTable: (empty(subnet.routeTableId)) ? null : {
-    id: subnet.routeTableId
-  }
-  // fwroutetable: (subnet.name == 'AzureFirewallSubnet') ?  null : {
-  //   id: fwrouterable.id
-  // } 
 }
 }]
 
-// resource fwrouterable 'Microsoft.Network/routeTables@2023-04-01' = {
-//   // fwrouterable definition
-// }
 
 resource resHubVnet 'Microsoft.Network/virtualNetworks@2020-06-01' = {
 name: vnetName
@@ -67,6 +65,24 @@ properties: {
   subnets: varSubnetProperties
     enableDdosProtection: false
     ddosProtectionPlan: null
+    enableVmProtection: false
+    virtualNetworkPeerings: [
+      
+    ]
+    // virtualNetworkGateway: null
+    // enablePrivateLink: false
+    // enablePrivateEndpointNetworkPolicies: false
+    // enableEndpointPublicNetworkAccess: false
+    // enablePrivateLinkServiceNetworkPolicies: false
+    // ipAllocations: 'Dynamic'
+    // enableIpForwarding: false
+    // enableFirewall: false
+    // enableAzureActiveDirectoryDomainServicesAuthentication: false
+    // azureActiveDirectoryDomainServicesAuthenticationConfiguration: null
+    // azureActiveDirectoryDomainServicesSettings: null
+    // enableAcceleratedNetworking: false
+    // enableVmProtection: false
+
 }
 }
 output resHubVnetId string = resHubVnet.id
@@ -242,23 +258,53 @@ resource RuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionG
 
 // firewall route table
 
-resource fwrouterable 'Microsoft.Network/routeTables@2023-04-01' = {
-  name: 'fwroutetable'
+// resource fwrouterable 'Microsoft.Network/routeTables@2023-04-01' = {
+//   name: 'fwroutetable'
+//   location: parLocation
+//   tags: {
+//     tagName1: 'tagValue1'
+//     tagName2: 'tagValue2'
+//   }
+//   properties: {
+//     disableBgpRoutePropagation: true
+//     routes: [
+//       {
+//         id: 'string'
+//         name: 'to-internet'
+//         properties: {
+//           addressPrefix: '10.0.0.0/16'
+//           hasBgpOverride: true
+//           nextHopIpAddress: '0.0.0.0'
+//           nextHopType: 'VirtualAppliance'
+//         }
+//         type: 'Microsoft.Network/routeTables/routes'
+//       }
+//     ]
+//     subnets: [
+//       {
+//         id: resHubVnet.properties.subnets[2].id
+//         name: 'frontendsubnet'
+//       }
+//     ]
+//   }
+// }
+
+resource fwroutetable 'Microsoft.Network/routeTables@2023-05-01' = {
+  name: 'firewallroutetable'
   location: parLocation
   tags: {
     tagName1: 'tagValue1'
-    tagName2: 'tagValue2'
   }
   properties: {
     disableBgpRoutePropagation: true
     routes: [
       {
-        id: 'string'
+        id: 'firewallroutetable'
         name: 'to-internet'
         properties: {
-          addressPrefix: '0.0.0.0/0'
+          addressPrefix: '10.0.0.0/16'
           hasBgpOverride: true
-          nextHopIpAddress: '10.10.254.4'
+          nextHopIpAddress: '0.0.0.0'
           nextHopType: 'VirtualAppliance'
         }
         type: 'Microsoft.Network/routeTables/routes'
@@ -266,24 +312,21 @@ resource fwrouterable 'Microsoft.Network/routeTables@2023-04-01' = {
     ]
     // subnets: [
     //   {
-    //     id: resHubVnet.properties.subnets[2].id
-    //     name: 'frontendsubnet'
+    //     id: resHubVnet.properties.subnets[3].id
+    //     name: 'frontendsubnetname'
     //   }
     // ]
   }
 }
 
-// firewall route table association
 
-// resource fwrouterableassociation 'Microsoft.Network/routeTables/association' = {
-//   name: 'fwrouterableassociation'
-//   parent: fwrouterable
+// resource frontendsubnetname 'Microsoft.Network/virtualNetworks/subnets@2023-05-01' = {
+//   parent: resHubVnet
+//   name: 'frontendsubnetname'
 //   properties: {
+//     addressPrefix: parSubnets[3].ipAddressRange
 //     routeTable: {
-//       id: fwrouterable.id
-//     }
-//     subnet: {
-//       id: resHubVnet.properties.subnets[3].id
+//       id: fwroutetable.id
 //     }
 //   }
 // }

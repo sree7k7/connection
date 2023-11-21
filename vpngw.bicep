@@ -38,7 +38,7 @@ resource vpnGW 'Microsoft.Network/virtualNetworkGateways@2023-05-01' = {
         }
       }
     ]
-} 
+  } 
 }
 
 resource localnetworkgateway 'Microsoft.Network/localNetworkGateways@2022-07-01' = {
