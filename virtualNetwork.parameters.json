@@ -117,30 +117,29 @@
     "value": {
       "ruleCollectionName": "DnatRuleCollections",
       "ruleCollectionPriority": 200,
-      "threatIntelMode": "Alert",
       "ruleCollection": [
         {
         "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
-        "action": "Allow",
-        "priority": 100,
         "rules": [
         {
-          "name": "dnatrule",
+          "comment": "=============// add dnat rule //=============",
+          "name": "vm rdp connection",
           "ruleType": "NatRule",
-          "description": "Ruless",
+          "description": "vm rdp connection from local laptop ip",
           "protocols": [
-            "UDP"
+            "TCP"
           ],
           "sourceAddresses": [
             "83.221.156.201"
           ],
-          "translatedAddress": "10.1.2.5",
+          "translatedAddress": "10.10.20.4",
           "destinationPorts": [
-            "8080"
+            "4000"
           ],
           "translatedPort": "3389"
         },
         {
+          "comment": "=============// add new dnat rule //=============",
           "name": "dnatrule2",
           "ruleType": "NatRule",
           "description": "Ruless2",
@@ -170,7 +169,7 @@
     "ruleCollection": [
       {
       "ruleCollectionType": "FirewallPolicyFilterRuleCollection",
-      "action": "Allow",
+      "action": "Deny",
       "rules": [
       {
         "name": "applicationrule",
@@ -187,10 +186,9 @@
           }
         ],
         "sourceAddresses": [
-          "83.221.156.201"
+          "10.2.2.5"
         ],
         "targetFqdns": [
-          "*",
           "*.goolge.com"
         ]
       },

@@ -157,3 +157,5 @@ resource vmextension 'Microsoft.Compute/virtualMachines/runCommands@2022-03-01' 
     }
   }
 }]
+
+output vmName array = [for i in range(0, numberOfInstances): vm[i].name]

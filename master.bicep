@@ -95,22 +95,22 @@ resource frontendsubnet 'Microsoft.Network/virtualNetworks/subnets@2023-02-01' e
 }
 
 
-module vpngw 'vpngw.bicep' = {
-  name: 'deploy-hub-vpngw'
-  scope: resourceGroup(varHubResourceGroupName)
-  dependsOn: [
-    publicip
-    modVnet
-  ]
-  params: {
-    parLocation: parLocation
-    parTags: parTags
-    parVpnGatewayConfig: parVpnGatewayConfig
-    localNetworkGatewayConfig: localNetworkGatewayConfig
-    parModGatewayPublicIp: publicip.outputs.outPublicIpId
-    parGatewaySubnetId: resGatewaySubnetRef.id
-  }
-}
+// module vpngw 'vpngw.bicep' = {
+//   name: 'deploy-hub-vpngw'
+//   scope: resourceGroup(varHubResourceGroupName)
+//   dependsOn: [
+//     publicip
+//     modVnet
+//   ]
+//   params: {
+//     parLocation: parLocation
+//     parTags: parTags
+//     parVpnGatewayConfig: parVpnGatewayConfig
+//     localNetworkGatewayConfig: localNetworkGatewayConfig
+//     parModGatewayPublicIp: publicip.outputs.outPublicIpId
+//     parGatewaySubnetId: resGatewaySubnetRef.id
+//   }
+// }
 
 module publicip 'publicip.bicep' = {
   name: 'publicip'
@@ -128,26 +128,39 @@ module publicip 'publicip.bicep' = {
 }
 
 // vm
-// module vm 'vm.bicep' = {
-//   name: 'vm'
-//   scope: resourceGroup(varHubResourceGroupName)
-//   dependsOn: [
-//     modVnet
-//   ]
-//   params: {
-//     parLocation: parLocation
-//     // parTags: parTags
-//     // parResourcePrefix: parResourcePrefix
-//     // parVnetId: resHubVnetRes.id
-//     // parSubnetId: resHubVnetRes.properties.subnets[0].id
+module vm 'vm.bicep' = {
+  name: 'vm'
+  scope: resourceGroup(varHubResourceGroupName)
+  dependsOn: [
+    modVnet
+  ]
+  params: {
+    parLocation: parLocation
+    // parTags: parTags
+    // parResourcePrefix: parResourcePrefix
+    // parVnetId: resHubVnetRes.id
+    // parSubnetId: resHubVnetRes.properties.subnets[0].id
 
-//     // subnetRef: frontendsubnet.id
-//     subnetRef: modVnet.outputs.frontendsubnetname
-//     vmSize: 'Standard_D2s_v3'
-//     numberOfInstances: 1
-//     vmNamePrefix: modVnet.name
-//   }
-// }
+    // subnetRef: frontendsubnet.id
+    subnetRef: modVnet.outputs.frontendsubnetname
+    vmSize: 'Standard_D2s_v3'
+    numberOfInstances: 1
+    vmNamePrefix: modVnet.name
+  }
+}
 
 output outVnetId string = resHubVnetRes.id
 
+// monitor
+
+module monitor 'monitor.bicep' = {
+  name: 'monitor'
+  scope: resourceGroup(varHubResourceGroupName)
+  dependsOn: [
+    modVnet
+  ]
+  params: {
+    parLocation: parLocation
+    vmName: vm.outputs.vmName[0]
+  }
+}
