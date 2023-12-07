@@ -24,7 +24,7 @@
         "enableDnsForwarding": false,
         "bgpPeeringAddress ": "",
         "bgpsettings": {
-          "asn": 65030,
+          "asn": 65050,
           "bgpPeeringAddress": "10.10.252.254"
         }
       }
@@ -40,7 +40,7 @@
           "BGPPeerIpAddress": "10.2.3.254"
         },
         "cgwip": {
-            "gatewayIpAddress": "20.4.240.140"
+            "gatewayIpAddress": "20.31.237.60"
         },
         "asn": 65040,
         "sharedKey": "abc@143"

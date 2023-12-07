@@ -1,6 +1,7 @@
 param actionGroupName string = 'On-it-Team'
 param parLocation string 
 param vmName string
+param resourceGroupName string
 
 var actionGroupEmail = 'sree7k7@gmail.com'
 
@@ -50,7 +51,43 @@ resource vmcpu2 'Microsoft.Insights/metricAlerts@2018-03-01' = {
     evaluationFrequency: 'PT1M'
     scopes: [
       // subscription().id
-      '/subscriptions/${subscription().subscriptionId}/resourceGroups/test-hub-rg/providers/Microsoft.Compute/virtualMachines/${vmName}'
+      '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Compute/virtualMachines/${vmName}'
+    ]
+    severity: 3
+    windowSize: 'PT5M' 
+    actions: [
+      {
+        actionGroupId: supportTeamActionGroup.id
+      }
+    ]
+  }
+}
+
+
+resource vpnstatus 'Microsoft.Insights/metricAlerts@2018-03-01' = {
+  name: 'BgpVpnStatus'
+  location: 'Global'
+  properties: {
+    targetResourceType: 'Microsoft.Network/virtualNetworkGateways'
+    targetResourceRegion: parLocation
+    criteria: {
+      'odata.type': 'Microsoft.Azure.Monitor.MultipleResourceMultipleMetricCriteria'
+      // 'odata.type': 'Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria'
+      allOf: [
+        {
+          criterionType: 'StaticThresholdCriterion'
+          timeAggregation: 'Average'
+          metricName: 'BGPPeerStatus'
+          operator: 'LessThanorEqual'
+          threshold: 0
+          name: 'BGPPeerStatus'
+        }
+      ]
+    }
+    enabled: true
+    evaluationFrequency: 'PT1M'
+    scopes: [
+      '/subscriptions/${subscription().subscriptionId}/resourceGroups/${resourceGroupName}/providers/Microsoft.Network/virtualNetworkGateways/vpnGW'
     ]
     severity: 3
     windowSize: 'PT5M' 

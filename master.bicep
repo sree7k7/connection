@@ -95,22 +95,22 @@ resource frontendsubnet 'Microsoft.Network/virtualNetworks/subnets@2023-02-01' e
 }
 
 
-// module vpngw 'vpngw.bicep' = {
-//   name: 'deploy-hub-vpngw'
-//   scope: resourceGroup(varHubResourceGroupName)
-//   dependsOn: [
-//     publicip
-//     modVnet
-//   ]
-//   params: {
-//     parLocation: parLocation
-//     parTags: parTags
-//     parVpnGatewayConfig: parVpnGatewayConfig
-//     localNetworkGatewayConfig: localNetworkGatewayConfig
-//     parModGatewayPublicIp: publicip.outputs.outPublicIpId
-//     parGatewaySubnetId: resGatewaySubnetRef.id
-//   }
-// }
+module vpngw 'vpngw.bicep' = {
+  name: 'deploy-hub-vpngw'
+  scope: resourceGroup(varHubResourceGroupName)
+  dependsOn: [
+    publicip
+    modVnet
+  ]
+  params: {
+    parLocation: parLocation
+    parTags: parTags
+    parVpnGatewayConfig: parVpnGatewayConfig
+    localNetworkGatewayConfig: localNetworkGatewayConfig
+    parModGatewayPublicIp: publicip.outputs.outPublicIpId
+    parGatewaySubnetId: resGatewaySubnetRef.id
+  }
+}
 
 module publicip 'publicip.bicep' = {
   name: 'publicip'
@@ -162,5 +162,6 @@ module monitor 'monitor.bicep' = {
   params: {
     parLocation: parLocation
     vmName: vm.outputs.vmName[0]
+    resourceGroupName: varHubResourceGroupName
   }
 }
