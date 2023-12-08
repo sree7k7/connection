@@ -60,8 +60,8 @@ resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2022-05-0
 
 // ------vm public ip --------
 
-resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2021-05-01' =  {
-  name: 'pip-${parLocation}'
+resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2021-05-01' = [for i in range(0, numberOfInstances):  {
+  name: 'pip-${parLocation}-${i}'
   location: parLocation
   zones: ['1', '2', '3']
   sku: {
@@ -73,11 +73,12 @@ resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2021-05-01' =  {
     idleTimeoutInMinutes: 4
   }
 }
+]
 
 // ----- nic ------
-resource networkInterface 'Microsoft.Network/networkInterfaces@2021-05-01' = {
+resource networkInterface 'Microsoft.Network/networkInterfaces@2021-05-01' = [for i in range(0, numberOfInstances):  {
   // name: '${networkInterfaceName}${i}'
-  name: '${networkInterfaceName}-${parLocation}'
+  name: '${networkInterfaceName}-${parLocation}-${i}'
   location: parLocation
   properties: {
     networkSecurityGroup: {
@@ -89,7 +90,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2021-05-01' = {
         properties: {
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
-            id: publicIPAddress.id
+            id: publicIPAddress[i].id
           }
           subnet: {
             id: subnetRef
@@ -102,6 +103,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2021-05-01' = {
   dependsOn: [
   ]
 }
+]
 
 // ------vm --------
 
@@ -131,7 +133,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for i in range(0, 
     networkProfile: {
       networkInterfaces: [
         {
-          id: networkInterface.id
+          id: networkInterface[i].id
         }
       ]
     }

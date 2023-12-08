@@ -109,126 +109,125 @@ resource fwpip 'Microsoft.Network/publicIPAddresses@2023-05-01' =  {
 @description('Zone numbers e.g. 1,2,3.')
 param availabilityZones array = []
 
-// resource firewall 'Microsoft.Network/azureFirewalls@2021-03-01' = {
-//   name: 'firewallName'
-//   location: parLocation
-//   zones: ((length(availabilityZones) == 0) ? null : availabilityZones)
-//   dependsOn: [
-//     fwpip
-//     firewallPolicy
-//   ]
-//   properties: {
-//     ipConfigurations: [
-//       {
-//         name: 'ipconfig1'
-//         properties: {
-//           subnet: {
-//             id: resHubVnet.properties.subnets[2].id
-//           }
-//           publicIPAddress: {
-//             id: fwpip.id
-//           }
-//         }
-//       }
-//     ]
-//     firewallPolicy: {
-//       id: firewallPolicy.id
-//     }
-//   }
-// }
+resource firewall 'Microsoft.Network/azureFirewalls@2021-03-01' = {
+  name: 'firewallName'
+  location: parLocation
+  zones: ((length(availabilityZones) == 0) ? null : availabilityZones)
+  dependsOn: [
+    fwpip
+    firewallPolicy
+  ]
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: resHubVnet.properties.subnets[2].id
+          }
+          publicIPAddress: {
+            id: fwpip.id
+          }
+        }
+      }
+    ]
+    firewallPolicy: {
+      id: firewallPolicy.id
+    }
+  }
+}
 
-// firewall policy
+// // firewall policy
 
-// resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
-//   name: firewallpolicyconfig.policyName
-//   location: parLocation
-//   properties: {
-//     threatIntelMode: firewallpolicyconfig.threatIntelMode
-//   }
-// }
+resource firewallPolicy 'Microsoft.Network/firewallPolicies@2022-01-01'= {
+  name: firewallpolicyconfig.policyName
+  location: parLocation
+  properties: {
+    threatIntelMode: firewallpolicyconfig.threatIntelMode
+  }
+}
 
+// // firewall policy NAT rules
 
-// firewall policy NAT rules
-
-// resource RuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
-//   parent: firewallPolicy
-//   name: firewallNetworkRulesConfig.ruleCollectionName
-//   properties: {
-//     priority: firewallNetworkRulesConfig.ruleCollectionPriority
-//       ruleCollections: [ {
-//         ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-//         action: {
-//           type: firewallNetworkRulesConfig.ruleCollection[0].action
-//         }
-//         name: firewallNetworkRulesConfig.ruleCollection[0].rules[0].name
-//         // name: 'NetworkRuleCollectioname'
-//         priority: firewallNetworkRulesConfig.ruleCollection[0].priority
-//         rules: [ for i in range(0, length(firewallNetworkRulesConfig.ruleCollection[0].rules)): {
-//             ruleType: firewallNetworkRulesConfig.ruleCollection[0].rules[i].ruleType
-//             name: firewallNetworkRulesConfig.ruleCollection[0].rules[i].name
-//             ipProtocols: firewallNetworkRulesConfig.ruleCollection[0].rules[i].protocols
-//             destinationAddresses: firewallNetworkRulesConfig.ruleCollection[0].rules[i].destinationAddresses           
-//             sourceAddresses: firewallNetworkRulesConfig.ruleCollection[0].rules[i].sourceAddresses
-//             // sourceIpGroups: [
-//             //   workloadIpGroup.id
-//             //   infraIpGroup.id
-//             // ]
-//             destinationPorts: firewallNetworkRulesConfig.ruleCollection[0].rules[i].destinationPorts
-//           }
-//         ]
-//       }
-//       {
-//         ruleCollectionType: 'FirewallPolicyNatRuleCollection'
-//         action: {
-//           type: 'DNAT'
-//         }
-//         name: firewallDNATRulesConfig.ruleCollectionName
-//         priority: firewallDNATRulesConfig.ruleCollectionPriority
-//         rules: [ for i in range(0, length(firewallDNATRulesConfig.ruleCollection[0].rules)):{
-//             description: 'nat rule'
-//             name: firewallDNATRulesConfig.ruleCollection[0].rules[i].name
-//             ruleType: firewallDNATRulesConfig.ruleCollection[0].rules[i].ruleType
-//             sourceAddresses: firewallDNATRulesConfig.ruleCollection[0].rules[i].sourceAddresses
-//             ipProtocols: firewallDNATRulesConfig.ruleCollection[0].rules[i].protocols
-//             // sourceIpGroups: [
-//             //   'string'
-//             // ]
-//             destinationAddresses: [
-//               fwpip.properties.ipAddress
-//             ]
-//             destinationPorts: firewallDNATRulesConfig.ruleCollection[0].rules[i].destinationPorts // this is used along with fwpip (e.g, ip:4000)
-//             translatedAddress: firewallDNATRulesConfig.ruleCollection[0].rules[i].translatedAddress
-//             translatedPort: firewallDNATRulesConfig.ruleCollection[0].rules[i].translatedPort
-//           }   
-//         ]
-//       }
-//       {
-//         ruleCollectionType: firewallApplicationRulesConfig.ruleCollection[0].ruleCollectionType
-//         action: {
-//           type: firewallApplicationRulesConfig.ruleCollection[0].action
-//         }
-//         name: firewallApplicationRulesConfig.ruleCollectionName
-//         priority: firewallApplicationRulesConfig.ruleCollectionPriority
-//         rules: [ for i in range(0, length(firewallApplicationRulesConfig.ruleCollection[0].rules)): {
-//             ruleType: firewallApplicationRulesConfig.ruleCollection[0].rules[i].ruleType
-//             name: firewallApplicationRulesConfig.ruleCollection[0].rules[i].name
-//             protocols: [
-//               {
-//                 port: firewallApplicationRulesConfig.ruleCollection[0].rules[i].protocols[0].port
-//                 protocolType: firewallApplicationRulesConfig.ruleCollection[0].rules[i].protocols[0].protocolType
-//               }
-//             ]
-//             sourceAddresses: firewallApplicationRulesConfig.ruleCollection[0].rules[i].sourceAddresses
-//             // sourceIpGroups: [
-//             //   'string'
-//             // ]
-//             targetFqdns: firewallApplicationRulesConfig.ruleCollection[0].rules[i].targetFqdns
-//           }
-//         ]
-//       }
-//     ]
-//   }
-// }
+resource RuleCollectionGroup 'Microsoft.Network/firewallPolicies/ruleCollectionGroups@2022-01-01' = {
+  parent: firewallPolicy
+  name: firewallNetworkRulesConfig.ruleCollectionName
+  properties: {
+    priority: firewallNetworkRulesConfig.ruleCollectionPriority
+      ruleCollections: [ {
+        ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
+        action: {
+          type: firewallNetworkRulesConfig.ruleCollection[0].action
+        }
+        name: firewallNetworkRulesConfig.ruleCollection[0].rules[0].name
+        // name: 'NetworkRuleCollectioname'
+        priority: firewallNetworkRulesConfig.ruleCollection[0].priority
+        rules: [ for i in range(0, length(firewallNetworkRulesConfig.ruleCollection[0].rules)): {
+            ruleType: firewallNetworkRulesConfig.ruleCollection[0].rules[i].ruleType
+            name: firewallNetworkRulesConfig.ruleCollection[0].rules[i].name
+            ipProtocols: firewallNetworkRulesConfig.ruleCollection[0].rules[i].protocols
+            destinationAddresses: firewallNetworkRulesConfig.ruleCollection[0].rules[i].destinationAddresses           
+            sourceAddresses: firewallNetworkRulesConfig.ruleCollection[0].rules[i].sourceAddresses
+            // sourceIpGroups: [
+            //   workloadIpGroup.id
+            //   infraIpGroup.id
+            // ]
+            destinationPorts: firewallNetworkRulesConfig.ruleCollection[0].rules[i].destinationPorts
+          }
+        ]
+      }
+      {
+        ruleCollectionType: 'FirewallPolicyNatRuleCollection'
+        action: {
+          type: 'DNAT'
+        }
+        name: firewallDNATRulesConfig.ruleCollectionName
+        priority: firewallDNATRulesConfig.ruleCollectionPriority
+        rules: [ for i in range(0, length(firewallDNATRulesConfig.ruleCollection[0].rules)):{
+            description: 'nat rule'
+            name: firewallDNATRulesConfig.ruleCollection[0].rules[i].name
+            ruleType: firewallDNATRulesConfig.ruleCollection[0].rules[i].ruleType
+            sourceAddresses: firewallDNATRulesConfig.ruleCollection[0].rules[i].sourceAddresses
+            ipProtocols: firewallDNATRulesConfig.ruleCollection[0].rules[i].protocols
+            // sourceIpGroups: [
+            //   'string'
+            // ]
+            destinationAddresses: [
+              fwpip.properties.ipAddress
+            ]
+            destinationPorts: firewallDNATRulesConfig.ruleCollection[0].rules[i].destinationPorts // this is used along with fwpip (e.g, ip:4000)
+            translatedAddress: firewallDNATRulesConfig.ruleCollection[0].rules[i].translatedAddress
+            translatedPort: firewallDNATRulesConfig.ruleCollection[0].rules[i].translatedPort
+          }   
+        ]
+      }
+      {
+        ruleCollectionType: firewallApplicationRulesConfig.ruleCollection[0].ruleCollectionType
+        action: {
+          type: firewallApplicationRulesConfig.ruleCollection[0].action
+        }
+        name: firewallApplicationRulesConfig.ruleCollectionName
+        priority: firewallApplicationRulesConfig.ruleCollectionPriority
+        rules: [ for i in range(0, length(firewallApplicationRulesConfig.ruleCollection[0].rules)): {
+            ruleType: firewallApplicationRulesConfig.ruleCollection[0].rules[i].ruleType
+            name: firewallApplicationRulesConfig.ruleCollection[0].rules[i].name
+            protocols: [
+              {
+                port: firewallApplicationRulesConfig.ruleCollection[0].rules[i].protocols[0].port
+                protocolType: firewallApplicationRulesConfig.ruleCollection[0].rules[i].protocols[0].protocolType
+              }
+            ]
+            sourceAddresses: firewallApplicationRulesConfig.ruleCollection[0].rules[i].sourceAddresses
+            // sourceIpGroups: [
+            //   'string'
+            // ]
+            targetFqdns: firewallApplicationRulesConfig.ruleCollection[0].rules[i].targetFqdns
+          }
+        ]
+      }
+    ]
+  }
+}
 
 
 // firewall route table
