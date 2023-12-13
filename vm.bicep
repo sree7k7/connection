@@ -15,7 +15,8 @@ param vmSize string = 'Standard_D2s_v3'
 @description('Admin username')
 param adminUsername string = 'demousr'
 
-param adminPassword string = 'Password@123'
+@secure()
+param vmpassword string
 
 var networkInterfaceName = 'nic'
 param numberOfInstances int = 1
@@ -117,7 +118,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2022-11-01' = [for i in range(0, 
     osProfile: {
       computerName: '${vmNamePrefix}'
       adminUsername: adminUsername
-      adminPassword: adminPassword
+      adminPassword: vmpassword
     }
     storageProfile: {
       imageReference: {
@@ -160,4 +161,45 @@ resource vmextension 'Microsoft.Compute/virtualMachines/runCommands@2022-03-01' 
   }
 }]
 
+
+
 output vmName array = [for i in range(0, numberOfInstances): vm[i].name]
+
+var vaultName = '${projectName}-vault'
+
+resource recoveryServicesVault 'Microsoft.RecoveryServices/vaults@2020-02-02' = {
+  name: vaultName
+  location: parLocation
+  sku: {
+    // name: 'RS0'
+    // tier: 'Standard'
+    name: 'Standard'
+  }
+  properties:{
+  }
+}
+
+param projectName string = 'testproj'
+var backupFabric = 'Azure'
+var backupPolicyName = 'DefaultPolicy'
+var protectionContainer = 'iaasvmcontainer;iaasvmcontainerv2;${resourceGroup().name};${vm[0].name}'
+var protectedItem = 'vm;iaasvmcontainerv2;${resourceGroup().name};${vm[0].name}'
+
+// ------------------- backup policy -------------------
+
+resource vaultName_backupFabric_protectionContainer_protectedItem 'Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems@2020-02-02' = [for i in range(0, numberOfInstances): {
+  name: '${vaultName}/${backupFabric}/${protectionContainer}/${protectedItem}'
+  properties: {
+    protectedItemType: 'Microsoft.Compute/virtualMachines'
+    policyId: '${recoveryServicesVault.id}/backupPolicies/${backupPolicyName}'
+    sourceResourceId: vm[i].id
+    policyState: 'Enabled'
+    backupManagementType: 'AzureIaasVM'
+    // policyName: backupPolicy.name
+  }
+} 
+]
+
+
+
+output vaultName_backupFabric_protectionContainer_protectedItem_name array = [for i in range(0, numberOfInstances): vaultName_backupFabric_protectionContainer_protectedItem[i].name]

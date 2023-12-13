@@ -126,6 +126,10 @@ module publicip 'publicip.bicep' = {
     // parAvailabilityZones: parAzVpnGatewayAvailabilityZones
   }
 }
+resource kv 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
+  name: 'testKeyVaultbySri'
+  scope: resourceGroup(varHubResourceGroupName)
+}
 
 // vm
 module vm 'vm.bicep' = {
@@ -138,8 +142,9 @@ module vm 'vm.bicep' = {
     parLocation: parLocation
     subnetRef: modVnet.outputs.frontendsubnetname
     vmSize: 'Standard_D2s_v3'
-    numberOfInstances: 2
+    numberOfInstances: 1
     vmNamePrefix: modVnet.name
+    vmpassword: kv.getSecret('adminPassword')
   }
 }
 
@@ -159,3 +164,17 @@ module monitor 'monitor.bicep' = {
     resourceGroupName: varHubResourceGroupName
   }
 }
+
+
+
+// module keyvault 'keyvault.bicep' = {
+//   scope: resourceGroup(varHubResourceGroupName)
+//   name: 'keyvault'
+//   params: {
+//     adminLogin: 'adminLogin'
+//     adminPassword: kv.getSecret('adminPassword') // give the cli command to get the secret name to retrieve the secret value
+//     sqlServerName: 'sqlserverbysri'
+//     parLocation: parLocation
+//     resourceGroupName: varHubResourceGroupName
+//   }
+// }
