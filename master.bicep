@@ -127,7 +127,7 @@ module publicip 'publicip.bicep' = {
   }
 }
 resource kv 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: 'testKeyVaultbySri'
+  name: 'testKeyVaultbySri1'
   scope: resourceGroup(varHubResourceGroupName)
 }
 
