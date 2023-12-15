@@ -203,3 +203,7 @@ resource vaultName_backupFabric_protectionContainer_protectedItem 'Microsoft.Rec
 
 
 output vaultName_backupFabric_protectionContainer_protectedItem_name array = [for i in range(0, numberOfInstances): vaultName_backupFabric_protectionContainer_protectedItem[i].name]
+
+
+
+

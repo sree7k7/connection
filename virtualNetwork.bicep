@@ -267,3 +267,62 @@ resource fwroutetable 'Microsoft.Network/routeTables@2023-05-01' = {
     ]
   }
 }
+
+
+// param resourceName string
+// param location string
+// param utcValue string = utcNow()
+// param UserAssignedIdentity string
+param resourceGroupName string = resourceGroup().name
+
+resource coicommand 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  name: 'inlineScript'
+  // scope: resourceGroup(varHubResourceGroupName)
+  location: parLocation
+  kind: 'AzureCLI'
+  // identity: {
+  //   type: 'UserAssigned'
+  //   // userAssignedIdentities:{
+  //   //   scope: resourceGroup().id
+  //   // }
+  // }
+  properties: {
+    // forceUpdateTag: utcValue
+    azCliVersion: '2.52.0'
+    timeout: 'PT10M'
+    arguments: '\'${resourceGroupName}\' \'${resourceGroupName}\''
+    scriptContent: 'result=$(az resource list --resource-group ${resourceGroupName} --name ${resourceGroupName}); echo $result | jq -c \'{Result: map({name: .name})}\' > $AZ_SCRIPTS_OUTPUT_PATH'
+    // scriptContent: 'az group create --name sri-hub-test --location "NorthEurope"'
+    cleanupPreference: 'OnSuccess'
+    retentionInterval: 'P1D'
+  }
+}
+
+output coicommand string = coicommand.properties.scriptContent
+
+
+// random password for virtual machine
+ 
+resource randompassword 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
+  name: 'randompassword'
+  location: parLocation
+  kind: 'AzureCLI'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '/subscriptions/39559d00-5c1f-4783-9b0e-6a66d5768506/resourceGroups/alz-hub-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/keyidentity': {
+
+      }
+    }
+    // userAssignedIdentities: {
+    //   '/subscriptions/39559d00-5c1f-4783-9b0e-6a66d5768506/resourceGroups/alz-hub-rg': {}
+    // }
+  }
+  properties: {
+    azCliVersion: '2.52.0'
+    // arguments: 'az keyvault secret set --vault-name sri-hub-test --name "vm-password" --value $(openssl rand -base64 32)'
+    scriptContent: 'az keyvault secret set --vault-name testKeyVaultbySri1 --name "adminPassword" --value $(openssl rand -base64 16)'
+    cleanupPreference: 'OnSuccess'
+    retentionInterval: 'P1D'
+  }
+}

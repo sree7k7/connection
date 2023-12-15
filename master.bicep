@@ -74,6 +74,7 @@ module modVnet 'virtualNetwork.bicep' = {
     firewallDNATRulesConfig: firewallDNATRulesConfig
     firewallApplicationRulesConfig: firewallApplicationRulesConfig
     vnetAddressPrefix: vnetAddressPrefix
+    resourceGroupName: varHubResourceGroupName
     // parSubnetName: 'AzureBastionSubnet'
     // firewallSubnetName: 'AzureFirewallSubnet'
   }
@@ -94,23 +95,24 @@ resource frontendsubnet 'Microsoft.Network/virtualNetworks/subnets@2023-02-01' e
   name: 'frontendsubnet'
 }
 
+param deployVPNGW bool = false
 
-// module vpngw 'vpngw.bicep' = {
-//   name: 'deploy-hub-vpngw'
-//   scope: resourceGroup(varHubResourceGroupName)
-//   dependsOn: [
-//     publicip
-//     modVnet
-//   ]
-//   params: {
-//     parLocation: parLocation
-//     parTags: parTags
-//     parVpnGatewayConfig: parVpnGatewayConfig
-//     localNetworkGatewayConfig: localNetworkGatewayConfig
-//     parModGatewayPublicIp: publicip.outputs.outPublicIpId
-//     parGatewaySubnetId: resGatewaySubnetRef.id
-//   }
-// }
+module vpngw 'vpngw.bicep' = if (deployVPNGW) {
+  name: 'deploy-hub-vpngw'
+  scope: resourceGroup(varHubResourceGroupName)
+  dependsOn: [
+    publicip
+    modVnet
+  ]
+  params: {
+    parLocation: parLocation
+    parTags: parTags
+    parVpnGatewayConfig: parVpnGatewayConfig
+    localNetworkGatewayConfig: localNetworkGatewayConfig
+    parModGatewayPublicIp: publicip.outputs.outPublicIpId
+    parGatewaySubnetId: resGatewaySubnetRef.id
+  }
+}
 
 module publicip 'publicip.bicep' = {
   name: 'publicip'
@@ -132,7 +134,10 @@ resource kv 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
 }
 
 // vm
-module vm 'vm.bicep' = {
+
+param deployVM bool = false
+
+module vm 'vm.bicep' = if (deployVM) {
   name: 'vm'
   scope: resourceGroup(varHubResourceGroupName)
   dependsOn: [
@@ -145,6 +150,9 @@ module vm 'vm.bicep' = {
     numberOfInstances: 1
     vmNamePrefix: modVnet.name
     vmpassword: kv.getSecret('adminPassword')
+
+    // UserAssignedIdentity:
+
   }
 }
 
@@ -152,7 +160,9 @@ output outVnetId string = resHubVnetRes.id
 
 // monitor
 
-module monitor 'monitor.bicep' = {
+param deployMonitor bool = false
+
+module monitor 'monitor.bicep' =  if (deployMonitor) {
   name: 'monitor'
   scope: resourceGroup(varHubResourceGroupName)
   dependsOn: [
@@ -178,3 +188,7 @@ module monitor 'monitor.bicep' = {
 //     resourceGroupName: varHubResourceGroupName
 //   }
 // }
+
+
+
+
