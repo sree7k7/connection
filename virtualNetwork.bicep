@@ -310,7 +310,7 @@ resource randompassword 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '/subscriptions/39559d00-5c1f-4783-9b0e-6a66d5768506/resourceGroups/alz-hub-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/keyidentity': {
+      '/subscriptions/39559d00-5c1f-4783-9b0e-6a66d5768506/resourceGroups/test-hub-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/keyidentity': {
 
       }
     }
@@ -321,8 +321,72 @@ resource randompassword 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
   properties: {
     azCliVersion: '2.52.0'
     // arguments: 'az keyvault secret set --vault-name sri-hub-test --name "vm-password" --value $(openssl rand -base64 32)'
-    scriptContent: 'az keyvault secret set --vault-name testKeyVaultbySri1 --name "adminPassword" --value $(openssl rand -base64 16)'
+    scriptContent: 'az keyvault secret set --vault-name testKeyVaultbySri2 --name "adminPassword" --value $(openssl rand -base64 16)'
     cleanupPreference: 'OnSuccess'
     retentionInterval: 'P1D'
+  }
+}
+
+
+// create key vault
+
+resource keyvault 'Microsoft.KeyVault/vaults@2021-06-01-preview' = {
+  name: 'testKeyVaultbySri5'
+  location: parLocation
+  properties: {
+    sku: {
+      name: 'standard'
+      family: 'A'
+    }
+    tenantId: subscription().tenantId
+    // objectId: '1454550c-0bd1-430d-af24-19b0bb17adcd'
+    accessPolicies: [
+      {
+        tenantId: subscription().tenantId
+        objectId: '1454550c-0bd1-430d-af24-19b0bb17adcd'
+        permissions: {
+          keys: [
+            'all'
+          ]
+          secrets: [
+            'all'
+          ]
+          certificates: [
+            'all'
+          ]
+          storage: [
+            'all'
+          ]
+        }
+      }
+    ]
+    enabledForDeployment: true
+    enabledForDiskEncryption: true
+    enabledForTemplateDeployment: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 7
+    // enablePurgeProtection: false
+    enableRbacAuthorization: false
+    // networkAcls: {
+    //   bypass: 'AzureServices'
+    //   defaultAction: 'Allow'
+    //   ipRules: [
+    //     {
+    //       value: 'test'
+    //       action: 'Allow'
+    //     }
+    //   ]
+    //   virtualNetworkRules: [
+    //     {
+    //       id: 'test'
+    //       action: 'Allow'
+    //     }
+    //   ]
+    // }
+    enableVaultForVolumeEncryption: false
+    enableVnetServiceEndpoint: false
+    enablePrivateEndpointNetworkPolicies: false
+    enablePrivateEndpoint: false
+
   }
 }

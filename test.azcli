@@ -1,0 +1,44 @@
+#!/bin/bash
+vault_name=testKeyVaultbySri2
+rsg=$(jq -r '.parResourcePrefix' resourceGroup.parameters.json)
+echo "rsg: '${rsg}' " 
+rsg="${rsg}-hub-rg"
+
+echo "rg: '${rg}' "
+SUBSCRIPTION_ID=$(az account show --query id --output tsv)
+echo "sub: ${SUBSCRIPTION_ID} "
+if [[ $(az keyvault show --subscription $SUBSCRIPTION_ID -g $rg -n $vault_name --query "name" | sed 's/[][ ", ]//g') != "$vault_name" ]]; then
+    read -r -p "Are you sure want to create: ${vault_name}? [y/N] " response
+    if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        echo "creating keyvault ${vault_name}..."
+        az keyvault create --name testKeyVaultbySri2 -g alz-hub-rg -l northeurope --enabled-for-template-deployment true
+        az keyvault secret set --vault-name testKeyVaultbySri2 --name "adminPassword" --value "hVFkk965BuUp"
+        echo "the keyvault ${vault_name} is created"
+    else
+        echo "ignored"
+    fi
+
+else
+    read -r -p "Are you sure want to delete: ${vault_name}? [y/N] " response
+    if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+        echo "deleting...."
+        az keyvault delete --subscription $SUBSCRIPTION_ID -g $rg -n $vault_name
+        echo "purging...."
+        az keyvault purge --subscription $SUBSCRIPTION_ID -n $vault_name
+        echo "done deleting...purging"
+    else    
+        echo "ignored"
+    fi
+fi
+
+
+# read -r -p "Are you sure want to delete: ${vault_name}? [y/N] " response
+# if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+#     echo "deleting...."
+#     az keyvault delete --subscription $SUBSCRIPTION_ID -g $rg -n $vault_name
+#     echo "purging...."
+#     az keyvault purge --subscription $SUBSCRIPTION_ID -n $vault_name
+#     echo "done deleting...purging"
+# else
+#     echo "ignored"
+# fi

@@ -129,13 +129,13 @@ module publicip 'publicip.bicep' = {
   }
 }
 resource kv 'Microsoft.KeyVault/vaults@2023-02-01' existing = {
-  name: 'testKeyVaultbySri1'
+  name: 'testKeyVaultbySri2'
   scope: resourceGroup(varHubResourceGroupName)
 }
 
 // vm
 
-param deployVM bool = false
+param deployVM bool = true 
 
 module vm 'vm.bicep' = if (deployVM) {
   name: 'vm'
@@ -150,9 +150,6 @@ module vm 'vm.bicep' = if (deployVM) {
     numberOfInstances: 1
     vmNamePrefix: modVnet.name
     vmpassword: kv.getSecret('adminPassword')
-
-    // UserAssignedIdentity:
-
   }
 }
 
@@ -160,7 +157,7 @@ output outVnetId string = resHubVnetRes.id
 
 // monitor
 
-param deployMonitor bool = false
+param deployMonitor bool = true
 
 module monitor 'monitor.bicep' =  if (deployMonitor) {
   name: 'monitor'
